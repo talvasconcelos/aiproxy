@@ -1,0 +1,150 @@
+{% extends "base.html" %} {% from "macros.jinja" import window_vars with context
+%} {% block page %}
+
+<q-dialog v-model="formDialog.show" position="top">
+  <q-card class="q-pa-lg q-pt-xl lnbits__dialog-card">
+    <q-form @submit="sendForm" class="q-gutter-md">
+      <q-input
+        filled
+        dense
+        v-model.trim="formDialog.data.description"
+        type="textarea"
+        label="Describe the model"></q-input>
+      <q-input
+        filled
+        dense
+        v-model.trim="formDialog.data.api_url"
+        type="text"
+        label="API URL *Optional"
+      ></q-input>
+      <q-input
+        filled
+        dense
+        v-model.trim="formDialog.data.api_key"
+        type="text"
+        label="API Key *Optional"
+      ></q-input>
+      <q-input
+        filled
+        dense
+        v-model.number="formDialog.data.cost"
+        type="number"
+        hint="Cost per call in satoshis"
+      ></q-input>
+      <q-select
+        filled
+        dense
+        emit-value
+        v-model="formDialog.data.wallet"
+        :options="g.user.walletOptions"
+        label="Wallet *"
+      ></q-select>
+      <div class="row q-mt-lg">
+        <q-btn
+          v-if="formDialog.data.id"
+          unelevated
+          color="primary"
+          type="submit"
+          >Update Link</q-btn
+        >
+        <q-btn
+          v-else
+          unelevated
+          color="primary"
+          :disable="formDialog.data.description == null || formDialog.data.wallet == null || formDialog.data.api_url == null"
+          type="submit"
+          >Create Link</q-btn
+        >
+        <q-btn v-close-popup flat color="grey" class="q-ml-auto">Cancel</q-btn>
+      </div>
+    </q-form>
+  </q-card>
+</q-dialog>
+
+<div class="row q-col-gutter-md">
+  <div class="col-12 col-md-8 col-lg-7 q-gutter-y-md">
+    <q-card>
+      <q-card-section>
+        <q-btn unelevated color="primary" @click="formDialog.show = true"
+          >New API Link</q-btn
+        >
+      </q-card-section>
+    </q-card>
+
+    <q-card>
+      <q-card-section>
+        <div class="row items-center no-wrap q-mb-md">
+          <div class="col">
+            <h5 class="text-subtitle1 q-my-none">API Links</h5>
+          </div>
+          <!-- <div class="col-auto">
+            <q-btn flat color="grey" @click="exportCSV">Export to CSV</q-btn>
+          </div> -->
+        </div>
+        <q-table
+          dense
+          flat
+          :data="links"
+          row-key="id"
+          :columns="linksTable.columns"
+          :pagination.sync="linksTable.pagination"
+        >
+          {% raw %}
+          <template v-slot:header="props">
+            <q-tr :props="props">
+              <q-th auto-width></q-th>
+              <q-th auto-width></q-th>
+              <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                {{ col.label }}
+              </q-th>
+              <q-th auto-width></q-th>
+            </q-tr>
+          </template>
+
+          <template v-slot:body="props">
+            <q-tr :props="props">
+              <q-td auto-width>
+                <q-btn
+                  unelevated
+                  dense
+                  size="xs"
+                  icon="edit"
+                  :color="($q.dark.isActive) ? 'grey-7' : 'grey-5'"
+                  @click="openUpdateForm(props.row.id)"
+                ></q-btn>
+              </q-td>
+              <q-td auto-width>
+                <q-btn
+                  unelevated
+                  dense
+                  size="xs"
+                  icon="local_activity"
+                  :color="($q.dark.isActive) ? 'grey-7' : 'grey-5'"
+                  type="a"
+                  :href="'/aiproxy/pay/' + props.row.id"
+                  target="_blank"
+                ></q-btn>
+              </q-td>
+              <q-td v-for="col in props.cols" :key="col.name" :props="props">
+                {{ col.value }}
+              </q-td>
+              <q-btn
+                flat
+                dense
+                size="xs"
+                @click="deleteLink(props.row.id)"
+                icon="cancel"
+                color="pink"
+              ></q-btn>
+            </q-tr>
+          </template>
+          {% endraw %}
+        </q-table>
+      </q-card-section>
+    </q-card>
+  </div>
+</div>
+{% endblock %} {% block scripts %} {{ window_vars(user) }}
+<script src="{{ url_for('aiproxy_static', path='js/index.js') }}"></script>
+
+{% endblock %}

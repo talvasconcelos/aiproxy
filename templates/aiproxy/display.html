@@ -1,0 +1,194 @@
+{% extends "public.html" %} {% block page %}
+<div class="row q-col-gutter-md justify-center">
+  <div class="col-12 col-md-7 col-lg-6 q-gutter-y-md">
+    <q-card class="q-pa-lg">
+      <q-card-section class="q-pa-md">
+        <h5 class="q-my-none">API Description</h5>
+        <br />
+      </q-card-section>
+      <q-card-section class="q-pa-md">
+        <div v-html="formatDescription"></div>
+      </q-card-section>
+      <q-card-section class="q-pa-md">
+        {%raw%}
+        <div>Price: {{cost}}sat / per call</div>
+        {%endraw%}
+      </q-card-section>
+      <q-separator></q-separator>
+      <q-card-section class="q-pa-md">
+        <q-form @submit="Invoice" class="q-gutter-md">
+          <div class="row">
+            <q-input
+              filled
+              dense
+              v-model.number="formDialog.data.calls"
+              type="number"
+              label="100"
+            ></q-input>
+          </div>
+          <div class="row q-mt-lg">
+            <q-btn
+              unelevated
+              color="primary"
+              :disable="formDialog.data.calls == null || formDialog.data.calls == 0"
+              type="submit"
+              >Buy</q-btn
+            >
+            <q-btn v-close-popup flat color="grey" class="q-ml-auto"
+              >Cancel</q-btn
+            >
+          </div>
+        </q-form>
+      </q-card-section>
+    </q-card>
+  </div>
+  <q-dialog v-model="receive.show" position="top" @hide="closeReceiveDialog">
+    <q-card
+      v-if="!receive.paymentReq"
+      class="q-pa-lg q-pt-xl lnbits__dialog-card"
+    >
+    </q-card>
+    <q-card v-else class="q-pa-lg q-pt-xl lnbits__dialog-card">
+      <div class="text-center q-mb-lg">
+        <a class="text-secondary" :href="'lightning:' + receive.paymentReq">
+          <q-responsive :ratio="1" class="q-mx-xl">
+            <qrcode
+              :value="'lightning:' + receive.paymentReq.toUpperCase()"
+              :options="{width: 340}"
+              class="rounded-borders"
+            ></qrcode>
+          </q-responsive>
+        </a>
+      </div>
+      <div class="row q-mt-lg">
+        <q-btn outline color="grey" @click="copyText(receive.paymentReq)"
+          >Copy invoice</q-btn
+        >
+        <q-btn v-close-popup flat color="grey" class="q-ml-auto">Close</q-btn>
+      </div>
+    </q-card>
+  </q-dialog>
+</div>
+
+{% endblock %} {% block scripts %}
+<script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
+
+<script>
+  const converter = new showdown.Converter()
+  converter.setFlavor('github')
+  converter.setOption('simpleLineBreaks', true)
+
+  Vue.component(VueQrcode.name, VueQrcode)
+
+  new Vue({
+    el: '#vue',
+    mixins: [windowMixin],
+    data: function () {
+      return {
+        formDialog: {
+          data: {
+            calls: null
+          }
+        },
+        receive: {
+          show: false,
+          status: 'pending',
+          paymentReq: null
+        }
+      }
+    },
+    computed: {
+      formatDescription() {
+        return converter.makeHtml(this.description)
+      }
+    },
+    methods: {
+      closeReceiveDialog() {
+        this.receive = {
+          show: false,
+          status: 'complete',
+          paymentReq: null
+        }
+        dismissMsg()
+
+        clearInterval(paymentChecker)
+      },
+      Invoice() {
+        LNbits.api
+          .request(
+            'GET',
+            `/aiproxy/api/v1/payments/${this.linkId}/${this.formDialog.data.calls}`
+          )
+          .then(response => {
+            dismissMsg = this.$q.notify({
+              timeout: 0,
+              message: 'Waiting for payment...'
+            })
+            this.receive = {
+              show: true,
+              status: 'pending',
+              paymentReq: response.data.payment_request
+            }
+            this.paymentHash = response.data.payment_hash
+            paymentChecker = setInterval(this.checkPayment, 3000)
+          })
+          .catch(error => {
+            LNbits.utils.notifyApiError(error)
+          })
+      },
+      checkPayment() {
+        LNbits.api
+          .request(
+            'GET',
+            `/aiproxy/api/v1/payment/${this.linkId}/${this.paymentHash}/${this.formDialog.data.calls}`
+          )
+          .then(response => {
+            if (response.data.paid) {
+              this.receive.status = 'paid'
+              this.$q.notify({
+                type: 'positive',
+                message: 'Sent, thank you!',
+                icon: null
+              })
+              this.closeReceiveDialog()
+              this.createUser(this.formDialog.data.calls)
+              this.formDialog.data.calls = null
+            }
+          })
+          .catch(error => {
+            LNbits.utils.notifyApiError(error)
+          })
+      },
+      createUser(uses) {
+        LNbits.api
+          .request('POST', '/aiproxy/api/v1/users', null, {
+            link: this.linkId,
+            uses: uses,
+            paid: true
+          })
+          .then(res => {
+            this.$q.notify({
+              type: 'positive',
+              message: 'User created!',
+              icon: null
+            })
+            this.user = res.data
+          })
+          .catch(error => {
+            LNbits.utils.notifyApiError(error)
+          })
+        //TODO display user's URL for the AI API
+      }
+    },
+    created() {
+      this.linkId = '{{ link_id }}'
+      this.description = '{{ description |tojson }}'
+      this.cost = '{{ cost }}'
+      this.description = this.description.substring(
+        1,
+        this.description.length - 1
+      )
+    }
+  })
+</script>
+{% endblock %}
