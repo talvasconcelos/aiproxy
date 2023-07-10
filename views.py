@@ -8,7 +8,7 @@ from lnbits.core.models import User
 from lnbits.decorators import check_user_exists
 
 from . import aiproxy_ext, aiproxy_renderer
-from .crud import get_link
+from .crud import get_aiproxy_user, get_link
 
 templates = Jinja2Templates(directory="templates")
 
@@ -40,3 +40,12 @@ async def pay(
             "cost": link.cost,
             }
     )
+
+@aiproxy_ext.get("/user/{user_id}")
+async def user_page(user_id: str, request: Request):
+    user = await get_aiproxy_user(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="User does not exist."
+        )
+    return aiproxy_renderer().TemplateResponse("aiproxy/user.html", {"request": request, "user": user.dict()})
