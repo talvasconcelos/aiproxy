@@ -6,13 +6,7 @@
   "donate": "donate@legend.lnbits.com",
   "contributors": [
     {
-      "name": "Ben Arc",
-      "uri": "mailto:ben@lnbits.com",
-      "role": "Developer"
-    },
-    {
-      "name": "DNI",
-      "uri": "https://github.com/dni",
+      "name": "Tiago Vasconcelos",
       "role": "Developer"
     }
   ],
