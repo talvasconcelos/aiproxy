@@ -18,7 +18,7 @@ window.app = Vue.createApp({
       },
       someBool: true,
       splitterModel: 20,
-      ai_proxyData: [],
+      aiproxyData: [],
       tab: 'frameworks',
       framworktab: 'fastapi',
       usefultab: 'magicalg',
@@ -27,16 +27,16 @@ window.app = Vue.createApp({
   },
   // Where functions live
   methods: {
-    ai_proxyFunction(data) {
+    aiproxyFunction(data) {
       LNbits.api
         .request(
           'GET', // Type of request
-          '/ai_proxy/api/v1/test/00000000', // URL of the endpoint
+          '/aiproxy/api/v1/test/00000000', // URL of the endpoint
           this.g.user.wallets[0].inkey, // Often endpoints require a key
           data
         )
         .then(response => {
-          this.ai_proxyData = response.data.map(mapObject) // Often whats returned is mapped onto some model
+          this.aiproxyData = response.data.map(mapObject) // Often whats returned is mapped onto some model
         })
         // Error will be passed to the frontend
         .catch(LNbits.utils.notifyApiError)
@@ -44,7 +44,7 @@ window.app = Vue.createApp({
     getVettedReadme() {
       // This is a function that gets the vetted readme from the LNbits repo and converts it from makrdown to html.
       LNbits.api
-        .request('GET', '/ai_proxy/api/v1/vetted', this.g.user.wallets[0].inkey)
+        .request('GET', '/aiproxy/api/v1/vetted', this.g.user.wallets[0].inkey)
         .then(response => {
           this.vettedData = LNbits.utils.convertMarkdown(response.data)
         })
@@ -78,7 +78,7 @@ window.app = Vue.createApp({
   },
   // To run on startup
   created() {
-    this.ai_proxyFunction('lorum')
+    this.aiproxyFunction('lorum')
     this.initWs()
     this.getVettedReadme()
   }

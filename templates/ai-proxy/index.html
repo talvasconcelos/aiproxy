@@ -1,6 +1,6 @@
 {% extends "base.html" %} {% from "macros.jinja" import window_vars with context
 %} {% block scripts %} {{ window_vars(user) }}
-<script src="{{ static_url_for('ai_proxy/static', path='js/index.js') }}"></script>
+<script src="{{ static_url_for('aiproxy/static', path='js/index.js') }}"></script>
 <!-- Do not remove. Test install extension version: 2 -->
 {% endblock %} {% block page %}
 <q-dialog v-model="thingDialog.show" position="top">
@@ -128,10 +128,10 @@
 
                   <code class="bg-grey-3 text-black">views.py</code> is used for
                   setting application routes:
-                  <img src="./static/fastapi-ai_proxy.png" /><br /><br />
+                  <img src="./static/fastapi-aiproxy.png" /><br /><br />
                   <code class="bg-grey-3 text-black">views_api.py</code> is used
                   for setting application API endpoints:<br />
-                  <img src="./static/fastapi-ai_proxy2.png" />
+                  <img src="./static/fastapi-aiproxy2.png" />
                 </q-tab-panel>
 
                 <q-tab-panel name="quasar" class="text-body1">
@@ -150,11 +150,11 @@
                   <i>
                     <strong>TIP:</strong> Look through
                     <code class="bg-grey-3 text-black">/template</code> files in
-                    other extensions for ai_proxys of Quasar elements being used. </i
+                    other extensions for aiproxys of Quasar elements being used. </i
                   ><br /><br />
 
                   <p>
-                    In the below ai_proxy we make a dialogue popup box (box can
+                    In the below aiproxy we make a dialogue popup box (box can
                     be triggered
                     <q-btn
                       size="sm"
@@ -163,7 +163,7 @@
                       >here</q-btn
                     >): <q-tooltip>Exmple of a tooltip!</q-tooltip>
                   </p>
-                  <img src="./static/quasar-ai_proxy.png" /><br /><br />
+                  <img src="./static/quasar-aiproxy.png" /><br /><br />
                   <div class="text-h6">Useful links:</div>
                   <q-btn
                     color="primary"
@@ -201,9 +201,9 @@
                     components.
                   </p>
 
-                  <p>Typical ai_proxy of Vue components in a frontend script:</p>
+                  <p>Typical aiproxy of Vue components in a frontend script:</p>
                   <img
-                    src="./static/script-ai_proxy.png"
+                    src="./static/script-aiproxy.png"
                     style="max-width: 800px"
                   /><br /><br />
 
@@ -212,7 +212,7 @@
                     <code class="bg-grey-3 text-black">v-if</code>:
                   </p>
                   <img
-                    src="./static/vif-ai_proxy.png"
+                    src="./static/vif-aiproxy.png"
                     style="max-width: 800px"
                   />
                 </q-tab-panel>
@@ -257,20 +257,20 @@
                     >, that streams rates from 6 different sources.
                   </p>
                   Exchange rate API:<br />
-                  <img src="./static/conversion-ai_proxy.png" /><br /><br />
+                  <img src="./static/conversion-aiproxy.png" /><br /><br />
                   Exchange rate functions, included using
                   <code class="bg-grey-3 text-black"
                     >from lnbits.utils.exchange_rates import
                     fiat_amount_as_satoshis</code
                   >:<br />
-                  <img src="./static/conversion-ai_proxy2.png" />
+                  <img src="./static/conversion-aiproxy2.png" />
                 </q-tab-panel>
                 <q-tab-panel name="qrcodes" class="text-body1">
                   <div class="text-h5 q-mb-md">QR Codes</div>
                   <p>
                     For most purposes use Quasar's inbuilt VueQrcode library:
                   </p>
-                  <img src="./static/qrcode-ai_proxy1.png" />
+                  <img src="./static/qrcode-aiproxy1.png" />
                   <p>
                     LNbits does also include a handy
                     <a
@@ -288,7 +288,7 @@
                     %}/api/v1/qrcode/some-data-you-want-in-a-qrcode:</a
                   ><br />
                   <br />
-                  <img src="./static/qrcode-ai_proxy.png" />
+                  <img src="./static/qrcode-aiproxy.png" />
                   <br />
                   <img
                     class="bg-white"
@@ -340,7 +340,7 @@
                     >
                     <br />
                     Function used in this demo:<br />
-                    <img src="./static/websocket-ai_proxy.png" /></p
+                    <img src="./static/websocket-aiproxy.png" /></p
                 ></q-tab-panel>
 
                 {% endraw %}

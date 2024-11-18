@@ -5,26 +5,26 @@ from lnbits.db import Database
 from loguru import logger
 
 from .tasks import wait_for_paid_invoices
-from .views import ai_proxy_ext_generic
-from .views_api import ai_proxy_ext_api
+from .views import aiproxy_ext_generic
+from .views_api import aiproxy_ext_api
 
-db = Database("ext_ai_proxy")
+db = Database("ext_aiproxy")
 
 scheduled_tasks: list[asyncio.Task] = []
 
-ai_proxy_ext: APIRouter = APIRouter(prefix="/ai_proxy", tags=["ai_proxy"])
-ai_proxy_ext.include_router(ai_proxy_ext_generic)
-ai_proxy_ext.include_router(ai_proxy_ext_api)
+aiproxy_ext: APIRouter = APIRouter(prefix="/aiproxy", tags=["aiproxy"])
+aiproxy_ext.include_router(aiproxy_ext_generic)
+aiproxy_ext.include_router(aiproxy_ext_api)
 
-ai_proxy_static_files = [
+aiproxy_static_files = [
     {
-        "path": "/ai_proxy/static",
-        "name": "ai_proxy_static",
+        "path": "/aiproxy/static",
+        "name": "aiproxy_static",
     }
 ]
 
 
-def ai_proxy_stop():
+def aiproxy_stop():
     for task in scheduled_tasks:
         try:
             task.cancel()
@@ -32,7 +32,7 @@ def ai_proxy_stop():
             logger.warning(ex)
 
 
-def ai_proxy_start():
+def aiproxy_start():
     from lnbits.tasks import create_permanent_unique_task
 
     task = create_permanent_unique_task("ext_testing", wait_for_paid_invoices)
