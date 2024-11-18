@@ -1,9 +1,9 @@
 {
   "repos": [
     {
-      "id": "ai-proxy",
+      "id": "aiproxy",
       "organisation": "lnbits",
-      "repository": "ai-proxy"
+      "repository": "aiproxy"
     }
   ]
 }
