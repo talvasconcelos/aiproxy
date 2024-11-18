@@ -1,127 +1,85 @@
-const mapLinks = obj => {
-  obj._data = _.clone(obj)
+const mapObject = obj => {
+  // obj.date = Quasar.date.formatDate(new Date(obj.time), 'YYYY-MM-DD HH:mm')
+  // here you can do something with the mapped data
   return obj
 }
 
-new Vue({
+window.app = Vue.createApp({
   el: '#vue',
   mixins: [windowMixin],
-  data: function () {
+  // Declare models/variables
+  data() {
     return {
-      links: [],
-      formDialog: {
+      protocol: window.location.protocol,
+      location: '//' + window.location.hostname,
+      thingDialog: {
         show: false,
         data: {}
       },
-      links: [],
-      linksTable: [
-        {name: 'id', align: 'left', label: 'ID', field: 'id'},
-        {name: 'api_url', align: 'left', label: 'URL', field: 'api_url'},
-        {name: 'api_key', align: 'left', label: 'Key', field: 'api_url'},
-        {name: 'wallet', align: 'left', label: 'Wallet', field: 'wallet'},
-        {name: 'cost', align: 'left', label: 'Cost', field: 'cost'}
-      ],
-      pagination: {
-        rowsPerPage: 10
-      }
+      someBool: true,
+      splitterModel: 20,
+      ai_proxyData: [],
+      tab: 'frameworks',
+      framworktab: 'fastapi',
+      usefultab: 'magicalg',
+      vettedData: ''
     }
   },
-
+  // Where functions live
   methods: {
-    getLinks() {
+    ai_proxyFunction(data) {
       LNbits.api
         .request(
-          'GET',
-          '/aiproxy/api/v1/links?all_wallets=true',
-          this.g.user.wallets[0].inkey
+          'GET', // Type of request
+          '/ai_proxy/api/v1/test/00000000', // URL of the endpoint
+          this.g.user.wallets[0].inkey, // Often endpoints require a key
+          data
         )
         .then(response => {
-          this.links = response.data
-          console.log(this.links)
+          this.ai_proxyData = response.data.map(mapObject) // Often whats returned is mapped onto some model
         })
-        .catch(error => {
-          LNbits.utils.notifyApiError(error)
+        // Error will be passed to the frontend
+        .catch(LNbits.utils.notifyApiError)
+    },
+    getVettedReadme() {
+      // This is a function that gets the vetted readme from the LNbits repo and converts it from makrdown to html.
+      LNbits.api
+        .request('GET', '/ai_proxy/api/v1/vetted', this.g.user.wallets[0].inkey)
+        .then(response => {
+          this.vettedData = LNbits.utils.convertMarkdown(response.data)
         })
+        .catch(LNbits.utils.notifyApiError)
     },
-    resetFormDialog() {
-      this.formDialog.show = false
-      this.formDialog.data = {}
-    },
-    openUpdateForm(id) {
-      const link = this.links.find(l => l.id === id)
-      this.formDialog.data = {...link}
-      this.formDialog.show = true
-    },
-    deleteLink(id) {
-      LNbits.utils
-        .confirmDialog('Are you sure you want to delete this link?')
-        .onOk(() => {
-          LNbits.api
-            .request(
-              'DELETE',
-              `/aiproxy/api/v1/links/${id}`,
-              this.g.user.wallets[0].adminkey
-            )
-            .then(() => {
-              this.links = this.links.filter(l => l.id !== id)
-              this.$q.notify({
-                message: `Link deleted.`,
-                timeout: 700
-              })
-            })
-            .catch(error => {
-              LNbits.utils.notifyApiError(error)
-            })
-        })
-    },
-    sendForm() {
-      const wallet = this.g.user.wallets.find(
-        w => w.id === this.formDialog.data.wallet
-      )
-      const data = {...this.formDialog.data}
-      if (!data.cost) data.cost = 0
-      if (data.id) {
-        this.updateLink(wallet, data)
+    async initWs() {
+      if (location.protocol !== 'http:') {
+        localUrl =
+          'wss://' +
+          document.domain +
+          ':' +
+          location.port +
+          '/api/v1/ws/32872r23g29'
       } else {
-        this.createLink(wallet, data)
+        localUrl =
+          'ws://' +
+          document.domain +
+          ':' +
+          location.port +
+          '/api/v1/ws/32872r23g29'
       }
+      this.ws = new WebSocket(localUrl)
+      this.ws.addEventListener('message', async ({data}) => {
+        const res = data.toString()
+        document.getElementById('text-to-change').innerHTML = res
+      })
     },
-    createLink(wallet, data) {
-      LNbits.api
-        .request('POST', '/aiproxy/api/v1/links', wallet.inkey, data)
-        .then(response => {
-          this.links.push(response.data)
-          this.$q.notify({
-            type: 'positive',
-            message: `Link created.`,
-            timeout: 700
-          })
-          this.resetFormDialog()
-        })
-        .catch(error => {
-          LNbits.utils.notifyApiError(error)
-        })
-    },
-    updateLink(wallet, data) {
-      LNbits.api
-        .request('PUT', `/aiproxy/api/v1/links/${data.id}`, wallet.inkey, data)
-        .then(response => {
-          const index = this.links.findIndex(l => l.id === data.id)
-          this.links.splice(index, 1, response.data)
-          this.$q.notify({
-            type: 'positive',
-            message: `Link updated.`,
-            timeout: 700
-          })
-          this.resetFormDialog()
-        })
-        .catch(error => {
-          LNbits.utils.notifyApiError(error)
-        })
+    sendThingDialog() {
+      console.log(this.thingDialog)
     }
   },
-
+  // To run on startup
   created() {
-    this.getLinks()
+    this.ai_proxyFunction('lorum')
+    this.initWs()
+    this.getVettedReadme()
   }
 })

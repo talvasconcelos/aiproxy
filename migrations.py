@@ -1,26 +1,12 @@
-async def m001_initial(db):
-    await db.execute(
-        f"""
-        CREATE TABLE aiproxy.apilinks (
-            id TEXT PRIMARY KEY,
-            wallet TEXT NOT NULL,
-            api_url TEXT NOT NULL,
-            api_key TEXT,
-            description TEXT NOT NULL,
-            cost INTEGER NOT NULL,
-            webhook TEXT
-        );
-        """
-    )
+# migrations.py is for building your database
 
-    await db.execute(
-        f"""
-        CREATE TABLE aiproxy.users (
-            id TEXT PRIMARY KEY,
-            link TEXT NOT NULL,
-            uses INTEGER NOT NULL,
-            paid BOOLEAN NOT NULL DEFAULT 0
-        );
-        """
-    )
-
+# async def m001_initial(db):
+#    await db.execute(
+#        f"""
+#        CREATE TABLE ai_proxy.ai_proxy (
+#            id TEXT PRIMARY KEY,
+#            wallet TEXT NOT NULL,
+#            time TIMESTAMP NOT NULL DEFAULT {db.timestamp_now}
+#        );
+#    """
+#    )

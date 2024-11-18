@@ -1,6 +1,33 @@
 {
-  "name": "Build your own!",
+  "name": "AI Proxy",
   "short_description": "Extension building guide",
-	"tile": "/aiproxy/static/bitcoin-extension.png",
-  "contributors": ["github_username"]
+  "tile": "https://raw.githubusercontent.com/talvasconcelos/ai-proxy/main/static/bitcoin-extension.png",
+  "min_lnbits_version": "1.0.0",
+  "donate": "donate@legend.lnbits.com",
+  "contributors": [
+    {
+      "name": "Ben Arc",
+      "uri": "mailto:ben@lnbits.com",
+      "role": "Developer"
+    },
+    {
+      "name": "DNI",
+      "uri": "https://github.com/dni",
+      "role": "Developer"
+    }
+  ],
+  "images": [
+    {
+      "uri": "https://raw.githubusercontent.com/talvasconcelos/ai-proxy/main/static/1.png"
+    },
+    {
+      "uri": "https://raw.githubusercontent.com/talvasconcelos/ai-proxy/main/static/2.png"
+    },
+    {
+      "uri": "https://raw.githubusercontent.com/talvasconcelos/ai-proxy/main/static/3.png"
+    }
+  ],
+  "description_md": "https://raw.githubusercontent.com/talvasconcelos/ai-proxy/main/description.md",
+  "terms_and_conditions_md": "https://raw.githubusercontent.com/talvasconcelos/ai-proxy/main/toc.md",
+  "license": "MIT"
 }

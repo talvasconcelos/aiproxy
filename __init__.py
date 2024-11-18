@@ -1,34 +1,39 @@
 import asyncio
 
 from fastapi import APIRouter
-from fastapi.staticfiles import StaticFiles
-
 from lnbits.db import Database
-from lnbits.helpers import template_renderer
-from lnbits.tasks import catch_everything_and_restart
+from loguru import logger
 
-db = Database("ext_aiproxy")
+from .tasks import wait_for_paid_invoices
+from .views import ai_proxy_ext_generic
+from .views_api import ai_proxy_ext_api
 
-aiproxy_ext: APIRouter = APIRouter(prefix="/aiproxy", tags=["aiproxy"])
+db = Database("ext_ai_proxy")
 
-aiproxy_static_files = [
+scheduled_tasks: list[asyncio.Task] = []
+
+ai_proxy_ext: APIRouter = APIRouter(prefix="/ai_proxy", tags=["ai_proxy"])
+ai_proxy_ext.include_router(ai_proxy_ext_generic)
+ai_proxy_ext.include_router(ai_proxy_ext_api)
+
+ai_proxy_static_files = [
     {
-        "path": "/aiproxy/static",
-        "app": StaticFiles(packages=[("lnbits", "extensions/aiproxy/static")]),
-        "name": "aiproxy_static",
+        "path": "/ai_proxy/static",
+        "name": "ai_proxy_static",
     }
 ]
 
 
-def aiproxy_renderer():
-    return template_renderer(["lnbits/extensions/aiproxy/templates"])
+def ai_proxy_stop():
+    for task in scheduled_tasks:
+        try:
+            task.cancel()
+        except Exception as ex:
+            logger.warning(ex)
 
 
-from .tasks import wait_for_paid_invoices
-from .views import *  # noqa: F401,F403
-from .views_api import *  # noqa: F401,F403
+def ai_proxy_start():
+    from lnbits.tasks import create_permanent_unique_task
 
-
-def tpos_start():
-    loop = asyncio.get_event_loop()
-    loop.create_task(catch_everything_and_restart(wait_for_paid_invoices))
+    task = create_permanent_unique_task("ext_testing", wait_for_paid_invoices)
+    scheduled_tasks.append(task)
