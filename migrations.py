@@ -1,6 +1,6 @@
 async def m001_initial(db):
     await db.execute(
-        f"""
+        """
         CREATE TABLE aiproxy.apilinks (
             id TEXT PRIMARY KEY,
             wallet TEXT NOT NULL,
@@ -14,7 +14,7 @@ async def m001_initial(db):
     )
 
     await db.execute(
-        f"""
+        """
         CREATE TABLE aiproxy.users (
             id TEXT PRIMARY KEY,
             link TEXT NOT NULL,
@@ -23,4 +23,3 @@ async def m001_initial(db):
         );
         """
     )
-

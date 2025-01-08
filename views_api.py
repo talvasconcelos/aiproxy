@@ -6,7 +6,7 @@ from starlette.exceptions import HTTPException
 
 from lnbits.core.crud import get_standalone_payment, get_user
 from lnbits.core.services import create_invoice
-from lnbits.decorators import WalletTypeInfo, get_key_type, require_admin_key
+from lnbits.decorators import WalletTypeInfo, require_admin_key, require_invoice_key
 
 from . import aiproxy_ext
 from .crud import (
@@ -23,40 +23,50 @@ from .models import CreateLink, CreateUser, User
 
 
 @aiproxy_ext.get("/api/v1/links")
-async def api_links(all_wallets: bool = Query(False), wallet: WalletTypeInfo = Depends(get_key_type)):
+async def api_links(
+    all_wallets: bool = Query(False),
+    wallet: WalletTypeInfo = Depends(require_admin_key),
+):
     wallet_ids = [wallet.wallet.id]
 
     if all_wallets:
         user = await get_user(wallet.wallet.user)
         wallet_ids = user.wallet_ids if user else []
 
-    return [event.dict() for event in await get_links(wallet_ids)]
+    return await get_links(wallet_ids)
 
-@aiproxy_ext.post("/api/v1/links")
-@aiproxy_ext.put("/api/v1/links/{link_id}")
+
+@aiproxy_ext.post("/api/v1/links", status_code=HTTPStatus.CREATED)
 async def api_link_create(
-    data: CreateLink, link_id=None, wallet: WalletTypeInfo = Depends(get_key_type)
+    data: CreateLink, key_type: WalletTypeInfo = Depends(require_admin_key)
 ):
-    if link_id:
-        link = await get_link(link_id)
-        if not link:
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND, detail="Link does not exist."
-            )
+    if data.wallet != key_type.wallet.id:
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your wallet.")
+    link = await create_link(data=data)
+    return link
 
-        if link.wallet != wallet.wallet.id:
-            raise HTTPException(
-                status_code=HTTPStatus.FORBIDDEN, detail="Not your link."
-            )
-        link = await update_link(link_id, **data.dict())
-    else:
-        link = await create_link(data=data)
-        assert link
 
-    return link.dict()
+@aiproxy_ext.put("/api/v1/links/{link_id}")
+async def api_link_update(
+    data: CreateLink, link_id: str, wallet: WalletTypeInfo = Depends(require_admin_key)
+):
+    link = await get_link(link_id)
+    if not link:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Link does not exist."
+        )
+    if link.wallet != wallet.wallet.id:
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your link.")
+    for key, value in data.dict().items():
+        setattr(link, key, value)
+    await update_link(link)
+    return link
+
 
 @aiproxy_ext.delete("/api/v1/links/{link_id}")
-async def api_link_delete(link_id: str, wallet: WalletTypeInfo = Depends(require_admin_key)):
+async def api_link_delete(
+    link_id: str, wallet: WalletTypeInfo = Depends(require_admin_key)
+):
     link = await get_link(link_id)
     if not link:
         raise HTTPException(
@@ -64,13 +74,12 @@ async def api_link_delete(link_id: str, wallet: WalletTypeInfo = Depends(require
         )
 
     if link.wallet != wallet.wallet.id:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail="Not your link."
-        )
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your link.")
 
     await delete_link(link_id)
 
     return "", HTTPStatus.NO_CONTENT
+
 
 ## Users
 @aiproxy_ext.get("/api/v1/payments/{link_id}/{uses}")
@@ -88,19 +97,19 @@ async def api_payment(link_id: str, uses: str):
             memo=f"Payment for {link_id}",
             extra={"tag": "aiproxy", "link": link_id, "uses": uses},
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
-    
+
     return {"payment_hash": payment_hash, "payment_request": payment_request}
+
 
 @aiproxy_ext.get("/api/v1/payment/{link_id}/{payment_hash}/{uses}")
 async def api_payment_status(link_id: str, payment_hash: str, uses: str):
     link = await get_link(link_id)
     if not link:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail="Link does not exist."
+            status_code=HTTPStatus.NOT_FOUND, detail="Link does not exist."
         )
 
     payment = await get_standalone_payment(payment_hash)
@@ -110,18 +119,16 @@ async def api_payment_status(link_id: str, payment_hash: str, uses: str):
 
     return {"paid": False}
 
-@aiproxy_ext.post("/api/v1/users")
-async def api_user_create(
-    data: CreateUser
-) -> User:
+
+@aiproxy_ext.post("/api/v1/users", status_code=HTTPStatus.CREATED)
+async def api_user_create(data: CreateUser) -> User:
     link = await get_link(data.link)
-    if not link:    
+    if not link:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="Link does not exist."
         )
     user = await create_user(data=data)
-    assert user
-    return user.dict()
+    return user
 
 
 ## PROXY ENDPOINTS
@@ -139,8 +146,8 @@ async def api_proxy(user_id: str, data: str):
     link = await get_link(user.link)
     assert link
 
-    url = (f"{user.link}")
-    
+    url = f"{user.link}"
+
     if link.api_key:
         auth = f"Bearer {link.api_key}"
     else:
@@ -156,7 +163,7 @@ async def api_proxy(user_id: str, data: str):
             r = await client.post(
                 url,
                 headers=header,
-                json={}, #TODO: Add data here
+                json={},  # TODO: Add data here
                 timeout=None,
             )
             ai_response = r.json()
@@ -164,11 +171,12 @@ async def api_proxy(user_id: str, data: str):
         except AssertionError:
             ai_response = {"error": "Error occured"}
         finally:
-            #sutract one use
-            user.uses -= 1 
-            #update user
+            # sutract one use
+            user.uses -= 1
+            # update user
             await update_aiproxy_user(user_id, uses=user.uses)
-    return ai_response #["choices"][0]["text"]
+    return ai_response  # ["choices"][0]["text"]
+
 
 ## sample response from OpenAI
 # {

@@ -3,10 +3,10 @@ const mapLinks = obj => {
   return obj
 }
 
-new Vue({
+window.app = Vue.createApp({
   el: '#vue',
   mixins: [windowMixin],
-  data: function () {
+  data() {
     return {
       links: [],
       formDialog: {
@@ -33,7 +33,7 @@ new Vue({
         .request(
           'GET',
           '/aiproxy/api/v1/links?all_wallets=true',
-          this.g.user.wallets[0].inkey
+          this.g.user.wallets[0].adminkey
         )
         .then(response => {
           this.links = response.data
@@ -88,7 +88,7 @@ new Vue({
     },
     createLink(wallet, data) {
       LNbits.api
-        .request('POST', '/aiproxy/api/v1/links', wallet.inkey, data)
+        .request('POST', '/aiproxy/api/v1/links', wallet.adminkey, data)
         .then(response => {
           this.links.push(response.data)
           this.$q.notify({
@@ -104,7 +104,7 @@ new Vue({
     },
     updateLink(wallet, data) {
       LNbits.api
-        .request('PUT', `/aiproxy/api/v1/links/${data.id}`, wallet.inkey, data)
+        .request('PUT', `/aiproxy/api/v1/links/${data.id}`, wallet.adminkey, data)
         .then(response => {
           const index = this.links.findIndex(l => l.id === data.id)
           this.links.splice(index, 1, response.data)

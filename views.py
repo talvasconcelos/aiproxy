@@ -19,8 +19,9 @@ async def index(
     user: User = Depends(check_user_exists),
 ):
     return aiproxy_renderer().TemplateResponse(
-        "aiproxy/index.html", {"request": request, "user": user.dict()}
+        "aiproxy/index.html", {"request": request, "user": user.json()}
     )
+
 
 @aiproxy_ext.get("/pay/{link_id}")
 async def pay(
@@ -33,13 +34,15 @@ async def pay(
             status_code=HTTPStatus.NOT_FOUND, detail="Link does not exist."
         )
     return aiproxy_renderer().TemplateResponse(
-        "aiproxy/display.html", {
+        "aiproxy/display.html",
+        {
             "request": request,
             "link_id": link.id,
             "description": link.description,
             "cost": link.cost,
-            }
+        },
     )
+
 
 @aiproxy_ext.get("/user/{user_id}")
 async def user_page(user_id: str, request: Request):
@@ -48,4 +51,6 @@ async def user_page(user_id: str, request: Request):
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="User does not exist."
         )
-    return aiproxy_renderer().TemplateResponse("aiproxy/user.html", {"request": request, "user": user.dict()})
+    return aiproxy_renderer().TemplateResponse(
+        "aiproxy/user.html", {"request": request, "user": user.json()}
+    )

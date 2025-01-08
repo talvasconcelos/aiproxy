@@ -13,6 +13,7 @@ class Link(BaseModel):
     cost: int = Query(..., ge=0)
     webhook: str = Query(None)
 
+
 class CreateLink(BaseModel):
     wallet: str
     api_url: str
@@ -21,11 +22,13 @@ class CreateLink(BaseModel):
     cost: int
     webhook: Optional[str]
 
+
 class User(BaseModel):
     id: str
     link: str
     uses: int
     paid: bool
+
 
 class CreateUser(BaseModel):
     link: str
