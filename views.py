@@ -28,7 +28,9 @@ async def pay(
     request: Request,
     link_id: str,
 ):
+    print("#### LINK", link_id)
     link = await get_link(link_id)
+    print(link)
     if not link:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="Link does not exist."

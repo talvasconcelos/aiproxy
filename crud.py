@@ -30,9 +30,11 @@ async def create_link(data: CreateLink) -> Link:
 
 
 async def get_link(link_id: str) -> Optional[Link]:
-    return await db.fetchone(
-        "SELECT * FROM aiproxy.apilinks WHERE :id", {"id": link_id}, Link
+    link = await db.fetchone(
+        "SELECT * FROM aiproxy.apilinks WHERE id = :id", {"id": link_id}, Link
     )
+    print("#### CRUD", link)
+    return link
 
 
 async def update_link(link: Link) -> Link:
@@ -41,13 +43,13 @@ async def update_link(link: Link) -> Link:
 
 
 async def delete_link(link_id: str) -> None:
-    await db.execute("DELETE FROM aiproxy.apilinks WHERE :id", {"id": link_id})
+    await db.execute("DELETE FROM aiproxy.apilinks WHERE id = :id", {"id": link_id})
 
 
 # USERS
 async def get_aiproxy_user(user_id: str) -> Optional[User]:
     return await db.fetchone(
-        "SELECT * FROM aiproxy.users WHERE :id", {"id": user_id}, User
+        "SELECT * FROM aiproxy.users WHERE id = :id", {"id": user_id}, User
     )
 
 
