@@ -33,7 +33,6 @@ async def get_link(link_id: str) -> Optional[Link]:
     link = await db.fetchone(
         "SELECT * FROM aiproxy.apilinks WHERE id = :id", {"id": link_id}, Link
     )
-    print("#### CRUD", link)
     return link
 
 
